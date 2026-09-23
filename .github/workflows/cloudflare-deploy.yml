@@ -30,67 +30,20 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile # 避免 Node 版本切换导致的 lockfile 冲突
+        run: pnpm install --no-frozen-lockfile
 
-      - name: Set environment variables
-        run: |
-          echo "BUILD_TARGET=cloudflare" >> $GITHUB_ENV
-          echo "NODE_ENV=production" >> $GITHUB_ENV
-          echo "NEXT_PUBLIC_STORAGE_TYPE=${{ secrets.NEXT_PUBLIC_STORAGE_TYPE }}" >> $GITHUB_ENV
-          echo "NEXT_PUBLIC_SITE_NAME=${{ secrets.NEXT_PUBLIC_SITE_NAME }}" >> $GITHUB_ENV
-          echo "NEXT_PUBLIC_SEARCH_MAX_PAGE=${{ secrets.NEXT_PUBLIC_SEARCH_MAX_PAGE }}" >> $GITHUB_ENV
-          echo "NEXT_PUBLIC_DOUBAN_PROXY_TYPE=${{ secrets.NEXT_PUBLIC_DOUBAN_PROXY_TYPE }}" >> $GITHUB_ENV
-          echo "NEXT_PUBLIC_DOUBAN_PROXY=${{ secrets.NEXT_PUBLIC_DOUBAN_PROXY }}" >> $GITHUB_ENV
-          echo "NEXT_PUBLIC_DOUBAN_IMAGE_PROXY_TYPE=${{ secrets.NEXT_PUBLIC_DOUBAN_IMAGE_PROXY_TYPE }}" >> $GITHUB_ENV
-          echo "NEXT_PUBLIC_DOUBAN_IMAGE_PROXY=${{ secrets.NEXT_PUBLIC_DOUBAN_IMAGE_PROXY }}" >> $GITHUB_ENV
-          echo "NEXT_PUBLIC_DISABLE_YELLOW_FILTER=${{ secrets.NEXT_PUBLIC_DISABLE_YELLOW_FILTER }}" >> $GITHUB_ENV
-          echo "NEXT_PUBLIC_FLUID_SEARCH=${{ secrets.NEXT_PUBLIC_FLUID_SEARCH }}" >> $GITHUB_ENV
-          echo "NEXT_PUBLIC_PROXY_M3U8_TOKEN=${{ secrets.NEXT_PUBLIC_PROXY_M3U8_TOKEN }}" >> $GITHUB_ENV
-          echo "NEXT_PUBLIC_DANMAKU_CACHE_EXPIRE_MINUTES=${{ secrets.NEXT_PUBLIC_DANMAKU_CACHE_EXPIRE_MINUTES }}" >> $GITHUB_ENV
-          echo "NEXT_PUBLIC_VOICE_CHAT_STRATEGY=${{ secrets.NEXT_PUBLIC_VOICE_CHAT_STRATEGY }}" >> $GITHUB_ENV
-          echo "NEXT_PUBLIC_ENABLE_OFFLINE_DOWNLOAD=${{ secrets.NEXT_PUBLIC_ENABLE_OFFLINE_DOWNLOAD }}" >> $GITHUB_ENV
-          echo "NEXT_PUBLIC_ENABLE_SOURCE_SEARCH=${{ secrets.NEXT_PUBLIC_ENABLE_SOURCE_SEARCH }}" >> $GITHUB_ENV
-          echo "USERNAME=${{ secrets.USERNAME }}" >> $GITHUB_ENV
-          echo "PASSWORD=${{ secrets.PASSWORD }}" >> $GITHUB_ENV
-          echo "UPSTASH_URL=${{ secrets.UPSTASH_URL }}" >> $GITHUB_ENV
-          echo "UPSTASH_TOKEN=${{ secrets.UPSTASH_TOKEN }}" >> $GITHUB_ENV
-          echo "TMDB_API_KEY=${{ secrets.TMDB_API_KEY }}" >> $GITHUB_ENV
-          echo "TMDB_PROXY=${{ secrets.TMDB_PROXY }}" >> $GITHUB_ENV
-          echo "TMDB_REVERSE_PROXY=${{ secrets.TMDB_REVERSE_PROXY }}" >> $GITHUB_ENV
-          echo "DANMAKU_API_BASE=${{ secrets.DANMAKU_API_BASE }}" >> $GITHUB_ENV
-          echo "DANMAKU_API_TOKEN=${{ secrets.DANMAKU_API_TOKEN }}" >> $GITHUB_ENV
-          echo "ANNOUNCEMENT=${{ secrets.ANNOUNCEMENT }}" >> $GITHUB_ENV
-          echo "CRON_PASSWORD=${{ secrets.CRON_PASSWORD }}" >> $GITHUB_ENV
-          echo "SITE_BASE=${{ secrets.SITE_BASE }}" >> $GITHUB_ENV
-          echo "REDIS_URL=${{ secrets.REDIS_URL }}" >> $GITHUB_ENV
-          echo "KVROCKS_URL=${{ secrets.KVROCKS_URL }}" >> $GITHUB_ENV
-          echo "INIT_CONFIG=${{ secrets.INIT_CONFIG }}" >> $GITHUB_ENV
-          echo "CONFIG_SUBSCRIPTION_URL=${{ secrets.CONFIG_SUBSCRIPTION_URL }}" >> $GITHUB_ENV
-          echo "ENABLE_TVBOX_SUBSCRIBE=${{ secrets.ENABLE_TVBOX_SUBSCRIBE }}" >> $GITHUB_ENV
-          echo "TVBOX_SUBSCRIBE_TOKEN=${{ secrets.TVBOX_SUBSCRIBE_TOKEN }}" >> $GITHUB_ENV
-          echo "WATCH_ROOM_ENABLED=${{ secrets.WATCH_ROOM_ENABLED }}" >> $GITHUB_ENV
-          echo "WATCH_ROOM_EXTERNAL_SERVER_AUTH=${{ secrets.WATCH_ROOM_EXTERNAL_SERVER_AUTH }}" >> $GITHUB_ENV
-          echo "WATCH_ROOM_EXTERNAL_SERVER_URL=${{ secrets.WATCH_ROOM_EXTERNAL_SERVER_URL }}" >> $GITHUB_ENV
-          echo "WATCH_ROOM_SERVER_TYPE=${{ secrets.WATCH_ROOM_SERVER_TYPE }}" >> $GITHUB_ENV
-
-      - name: Configure D1 Database in wrangler.toml
+      - name: Update wrangler.toml with environment variables
+        # 在本地生成一份临时的、带有完整变量的 wrangler.toml 供打包和部署使用
         run: |
           STORAGE_TYPE="${{ secrets.NEXT_PUBLIC_STORAGE_TYPE }}"
           if [ "$STORAGE_TYPE" != "d1" ]; then
-            echo "Storage type is not d1 (current: $STORAGE_TYPE), removing D1 database configuration"
+            echo "Storage type is not d1, removing D1 database configuration"
             sed -i '/^# D1 数据库绑定$/,/^database_id = .*$/d' wrangler.toml
             sed -i '/^\[\[d1_databases\]\]$/,/^$/{ /^\[\[d1_databases\]\]$/d; /^binding = /d; /^database_name = /d; /^database_id = /d; }' wrangler.toml
-            echo "D1 configuration removed from wrangler.toml"
           elif [ -n "${{ secrets.D1_DATABASE_ID }}" ]; then
             sed -i 's/REPLACE_WITH_YOUR_D1_DATABASE_ID/${{ secrets.D1_DATABASE_ID }}/g' wrangler.toml
-            echo "D1 Database ID replaced successfully"
-          else
-            echo "⚠️ Storage type is d1 but D1_DATABASE_ID secret not set"
-            exit 1
           fi
 
-      - name: Update wrangler.toml with environment variables
-        run: |
           append_var() {
             local var_name=$1
             local var_value=$2
@@ -136,11 +89,17 @@ jobs:
           append_var "WATCH_ROOM_SERVER_TYPE" "${{ secrets.WATCH_ROOM_SERVER_TYPE }}"
 
       - name: Build Project
+        # 将环境变量注入到 Build 进程，并调用项目自己的打包命令
         run: pnpm run build
+        env:
+          BUILD_TARGET: cloudflare
+          NODE_ENV: production
+          NEXT_PUBLIC_STORAGE_TYPE: ${{ secrets.NEXT_PUBLIC_STORAGE_TYPE }}
+          NEXT_PUBLIC_SITE_NAME: ${{ secrets.NEXT_PUBLIC_SITE_NAME }}
 
-      - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy .next --project-name=YOUR_PROJECT_NAME # ⚠️ 请把 YOUR_PROJECT_NAME 替换为你实际的 Cloudflare Pages 项目名称
+      - name: Deploy to Cloudflare Pages (Direct CLI)
+        # 抛弃 Action 容器，改用最直接、不易出错的原生 CLI 进行部署
+        run: pnpm wrangler pages deploy .next --project-name=YOUR_PROJECT_NAME
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
