@@ -90,9 +90,12 @@ jobs:
 
       - name: Build Project
         # 核心修复：直接向编译步骤显式提供项目初始化及页面数据收集所需的所有变量
+        run: pnpm exec cloudflare-build
         env:
           BUILD_TARGET: cloudflare
           NODE_ENV: production
+          NEXT_OUTPUT: standalone
+          OPENNEXT_PLATFORM: cloudflare
           NEXT_PUBLIC_STORAGE_TYPE: ${{ secrets.NEXT_PUBLIC_STORAGE_TYPE }}
           NEXT_PUBLIC_SITE_NAME: ${{ secrets.NEXT_PUBLIC_SITE_NAME }}
           NEXT_PUBLIC_SEARCH_MAX_PAGE: ${{ secrets.NEXT_PUBLIC_SEARCH_MAX_PAGE }}
@@ -131,11 +134,10 @@ jobs:
           WATCH_ROOM_SERVER_TYPE: ${{ secrets.WATCH_ROOM_SERVER_TYPE }}
           NEXT_PHASE: phase-production-build
           FORCE_DYNAMIC: "true"
-        run: pnpm exec open-next build
-
+       
       - name: Deploy to Cloudflare Pages (Direct CLI)
         # 💡 修改点：因为 open-next 构建的产物不在 .next，而是在 .open-next/assets
-        run: pnpm wrangler pages deploy .open-next/assets --project-name=YOUR_PROJECT_NAME
+        run: pnpm wrangler pages deploy .open-next/assets --project-name=moontvplus
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
