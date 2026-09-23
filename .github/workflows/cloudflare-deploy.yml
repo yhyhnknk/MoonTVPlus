@@ -131,11 +131,11 @@ jobs:
           WATCH_ROOM_SERVER_TYPE: ${{ secrets.WATCH_ROOM_SERVER_TYPE }}
           NEXT_PHASE: phase-production-build
           FORCE_DYNAMIC: "true"
-        run: pnpm run build
+        run: pnpm exec open-next build
 
       - name: Deploy to Cloudflare Pages (Direct CLI)
-        # 调用项目内部原生 wrangler，安全可靠地一键发布
-        run: pnpm wrangler pages deploy .next --project-name=YOUR_PROJECT_NAME
+        # 💡 修改点：因为 open-next 构建的产物不在 .next，而是在 .open-next/assets
+        run: pnpm wrangler pages deploy .open-next/assets --project-name=YOUR_PROJECT_NAME
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
