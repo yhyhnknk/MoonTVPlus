@@ -129,6 +129,8 @@ jobs:
           WATCH_ROOM_EXTERNAL_SERVER_AUTH: ${{ secrets.WATCH_ROOM_EXTERNAL_SERVER_AUTH }}
           WATCH_ROOM_EXTERNAL_SERVER_URL: ${{ secrets.WATCH_ROOM_EXTERNAL_SERVER_URL }}
           WATCH_ROOM_SERVER_TYPE: ${{ secrets.WATCH_ROOM_SERVER_TYPE }}
+          NEXT_PHASE: phase-production-build
+          FORCE_DYNAMIC: "true"
         run: pnpm run build
 
       - name: Deploy to Cloudflare Pages (Direct CLI)
