@@ -22,7 +22,7 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-       
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -135,9 +135,12 @@ jobs:
           append_var "WATCH_ROOM_EXTERNAL_SERVER_URL" "${{ secrets.WATCH_ROOM_EXTERNAL_SERVER_URL }}"
           append_var "WATCH_ROOM_SERVER_TYPE" "${{ secrets.WATCH_ROOM_SERVER_TYPE }}"
 
+      - name: Build Project
+        run: pnpm run build
+
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy .next --project-name=YOUR_PROJECT_NAME # 请替换为你的 Pages 项目名称
+          command: pages deploy .next --project-name=YOUR_PROJECT_NAME # ⚠️ 请把 YOUR_PROJECT_NAME 替换为你实际的 Cloudflare Pages 项目名称
