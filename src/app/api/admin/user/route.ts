@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /* eslint-disable @typescript-eslint/no-explicit-any,no-console,@typescript-eslint/no-non-null-assertion */
 
 import { NextRequest, NextResponse } from 'next/server';
