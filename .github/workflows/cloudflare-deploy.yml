@@ -147,8 +147,7 @@ jobs:
       - name: Build for Cloudflare
         run: pnpm run build:cloudflare
 
-      - name: Install Wrangler
-        run: pnpm add -g wrangler@4.60.0
+      # 💡 移除了手动的 pnpm add -g wrangler 步骤，直接在下面用 npx 跑迁移，更不容易因路径问题报错
 
       - name: Run D1 Database Migrations
         run: |
@@ -169,7 +168,8 @@ jobs:
           for migration_file in ./migrations/*.sql; do
             if [ -f "$migration_file" ]; then
               echo "Executing migration: $(basename $migration_file)"
-              wrangler d1 execute moontvplus --remote --file="$migration_file" || echo "⚠️ Migration may have been skipped (already applied)"
+              # 💡 使用 npx 指定 wrangler 版本执行，避免全局路径找不到的问题
+              npx wrangler@4.60.0 d1 execute moontvplus --remote --file="$migration_file" || echo "⚠️ Migration may have been skipped (already applied)"
             fi
           done
 
@@ -184,5 +184,6 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: deploy
+          # 💡 如果上面还报错，可以尝试把 packageManager 删掉，或者改为自动
           packageManager: pnpm
           wranglerVersion: "4.60.0"
