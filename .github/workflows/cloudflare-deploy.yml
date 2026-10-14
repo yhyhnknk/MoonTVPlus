@@ -147,8 +147,6 @@ jobs:
       - name: Build for Cloudflare
         run: pnpm run build:cloudflare
 
-      # 💡 移除了手动的 pnpm add -g wrangler 步骤，直接在下面用 npx 跑迁移，更不容易因路径问题报错
-
       - name: Run D1 Database Migrations
         run: |
           STORAGE_TYPE="${{ secrets.NEXT_PUBLIC_STORAGE_TYPE }}"
@@ -168,7 +166,6 @@ jobs:
           for migration_file in ./migrations/*.sql; do
             if [ -f "$migration_file" ]; then
               echo "Executing migration: $(basename $migration_file)"
-              # 💡 使用 npx 指定 wrangler 版本执行，避免全局路径找不到的问题
               npx wrangler@4.60.0 d1 execute moontvplus --remote --file="$migration_file" || echo "⚠️ Migration may have been skipped (already applied)"
             fi
           done
@@ -179,12 +176,3 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
       - name: Deploy to Cloudflare
-        uses: cloudflare/wrangler-action@v3
-        with:
-          # 💡 非常重要：这里必须改用 apiKey 和 email 组合，不能再使用 apiToken 变量
-          apiKey: ${{ secrets.CLOUDFLARE_API_KEY }}
-          email: alexphua7777@gmail.com
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy
-          packageManager: pnpm
-          wranglerVersion: "4.60.0"
