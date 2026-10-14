@@ -178,12 +178,13 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
-      - name: Deploy to Cloudflare
+        - name: Deploy to Cloudflare
         uses: cloudflare/wrangler-action@v3
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          # 💡 非常重要：这里必须改用 apiKey 和 email 组合，不能再使用 apiToken 变量
+          apiKey: ${{ secrets.CLOUDFLARE_API_KEY }}
+          email: alexphua7777@gmail.com
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: deploy
-          # 💡 如果上面还报错，可以尝试把 packageManager 删掉，或者改为自动
           packageManager: pnpm
           wranglerVersion: "4.60.0"
