@@ -162,7 +162,8 @@ jobs:
           for migration_file in ./migrations/*.sql; do
             if [ -f "$migration_file" ]; then
               echo "Executing migration: $(basename $migration_file)"
-              npx wrangler d1 execute moontvplus --remote --file="$migration_file" || echo "⚠️ Migration may have been skipped (already applied)"
+              # ✅ 修正：改用 pnpm dlx 强制拉取最新的 wrangler 执行迁移
+              pnpm dlx wrangler d1 execute moontvplus --remote --file="$migration_file" || echo "⚠️ Migration may have been skipped (already applied)"
             fi
           done
 
@@ -172,7 +173,8 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
       - name: 部署至 Cloudflare Pages
-        run: npx wrangler pages deploy .open-next --project-name=moontvplus
+        # ✅ 修正：改用 pnpm dlx 并在后面明确追加 --yes 避免非交互式环境下卡死
+        run: pnpm dlx wrangler pages deploy .open-next --project-name=moontvplus --yes
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
