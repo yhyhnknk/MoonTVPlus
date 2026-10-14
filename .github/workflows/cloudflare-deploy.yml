@@ -14,13 +14,13 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    name: Deploy to Cloudflare Pages
+    name: 部署到 Cloudflare 页面
 
     steps:
-      - name: Checkout source code
+      - name: 查看源代码
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
+      - name: Pnpm 设置
         uses: pnpm/action-setup@v4
 
       - name: Setup Node.js
@@ -29,10 +29,10 @@ jobs:
           node-version: '24'
           cache: 'pnpm'
 
-      - name: Install dependencies
+      - name: 安装依赖项
         run: pnpm install --frozen-lockfile
 
-      - name: Set environment variables
+      - name: 设置环境变量
         run: |
           echo "BUILD_TARGET=cloudflare" >> $GITHUB_ENV
           echo "NODE_ENV=production" >> $GITHUB_ENV
@@ -73,7 +73,7 @@ jobs:
           echo "WATCH_ROOM_EXTERNAL_SERVER_URL=${{ secrets.WATCH_ROOM_EXTERNAL_SERVER_URL }}" >> $GITHUB_ENV
           echo "WATCH_ROOM_SERVER_TYPE=${{ secrets.WATCH_ROOM_SERVER_TYPE }}" >> $GITHUB_ENV
 
-      - name: Configure D1 Database in wrangler.toml
+      - name: 在 wrangler.toml 中配置 D1数据库
         run: |
           STORAGE_TYPE="${{ secrets.NEXT_PUBLIC_STORAGE_TYPE }}"
 
@@ -176,3 +176,9 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
       - name: Deploy to Cloudflare
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
+          packageManager: pnpm
