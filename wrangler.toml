@@ -1,4 +1,4 @@
-pages_build_output_dir = ".open-next"
+# 🚀 修正：删除了 pages_build_output_dir 这一行，彻底转为 Workers 架构
 name = "moontv-plus"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
@@ -15,6 +15,7 @@ binding = "ASSETS"
 [[d1_databases]]
 binding = "DB"
 database_name = "moontvplus"
+# ✅ 修正：把之前打包报错中拿到的真实账户下的数据库 ID 贴在这里，或者确保由 GitHub 流水线脚本动态替换
 database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
 
 [vars]
