@@ -172,10 +172,9 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
-      - name: 部署至 Cloudflare Pages
-        # ✅ 修正：重新指定回 .open-next，并追加 --pages-build-output-dir 参数强行覆盖 wrangler.toml 的检测
-        run: pnpm dlx wrangler pages deploy .open-next --project-name=moontvplus --pages-build-output-dir=.open-next
+      - name: 部署至 Cloudflare Workers
+        # ✅ 已修复：转为标准的 Workers 全栈容器部署，Wrangler 会自动识别并上传 .open-next 内的全部代码和资产
+        run: pnpm dlx wrangler deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-
